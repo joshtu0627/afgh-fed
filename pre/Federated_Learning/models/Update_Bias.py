@@ -34,7 +34,7 @@ class LocalUpdate(object):
         self.selected_client = client
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=self.args.local_bs, shuffle=True)
 
-    def train(self, net):
+    def train_with_bias_noise(self, net):
         net.train()
         # train and update
         optimizer = torch.optim.SGD(
@@ -65,7 +65,7 @@ class LocalUpdate(object):
 
         # calculate noises
         # noises = DP_Gaussian.Gaussian_Mechanism(grad, self.args.device)
-        noises = DP_Laplace.Laplace_Mechanism(grad, self.args.device)
+        noises = DP_Laplace.Laplace_Mechanism_Bias(grad, self.args.device)
 
         # calculate grad + noises       
         grad_perturb = {}
@@ -81,6 +81,53 @@ class LocalUpdate(object):
         # read_write.WriteNoiseFile('./pre/clients_noises/client' + str(self.selected_client) + '.txt', noises)
 
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss), grad, grad_perturb, noises
+
+    def train_with_gradient_noise(self, net):
+        net.train()
+        # train and update
+        optimizer = torch.optim.SGD(
+            net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
+
+        # Initial gradients
+        grad = {}
+        for name, param in net.named_parameters():
+            grad[name] = torch.zeros(param.shape, dtype=torch.float32).to(self.args.device)
+
+        epoch_loss = []
+        for iter in range(self.args.local_ep):
+            batch_loss = []
+            for batch_idx, (features, labels) in enumerate(self.ldr_train):
+                features, labels = features.to(self.args.device), labels.to(self.args.device)
+                net.zero_grad()
+                log_probs = net(features)
+                loss = self.loss_func(log_probs, labels)
+                loss.backward()
+                optimizer.step()
+                for name, param in net.named_parameters():
+                    grad[name] += param.grad
+
+                if self.args.verbose and batch_idx % 10 == 0:
+                    print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(iter, batch_idx * len(features), len(self.ldr_train.dataset), 100. * batch_idx / len(self.ldr_train), loss.item()))
+                batch_loss.append(loss.item())
+            epoch_loss.append(sum(batch_loss)/len(batch_loss))
+
+        # calculate noises
+        # noises = DP_Gaussian.Gaussian_Mechanism(grad, self.args.device)
+        noises = DP_Laplace.Laplace_Mechanism_Gradient(grad, self.args.device)
+
+        # calculate grad + noises       
+        grad_perturb = {}
+        for name in grad.keys():
+            # add noises on whole gradient
+            grad_perturb[name] = grad[name] + noises[name]
+
+        # write noises to be encrypted
+        # read_write.WriteNoiseFile('./pre/clients_noises/client' + str(self.selected_client) + '.txt', noises)
+
+        return net.state_dict(), sum(epoch_loss) / len(epoch_loss), grad, grad_perturb, noises
+
+
+
 
     def train_no_noise(self, net):
         net.train()
