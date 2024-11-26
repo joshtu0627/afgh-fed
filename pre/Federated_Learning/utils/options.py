@@ -9,12 +9,12 @@ def args_parser():
     parser = argparse.ArgumentParser()
     # federated arguments
     parser.add_argument('--epochs', type=int, default=10, help="rounds of training")  # default 10
-    parser.add_argument('--num_users', type=int, default=100, help="number of users: K")  # default 100
+    parser.add_argument('--num_users', type=int, default=50, help="number of users: K")  # default 100
     parser.add_argument('--frac', type=float, default=0.1, help="the fraction of clients: C")  # default 0.1
     parser.add_argument('--local_ep', type=int, default=5, help="the number of local epochs: E")  # default 5
     parser.add_argument('--local_bs', type=int, default=10, help="local batch size: B")  # default 10
     parser.add_argument('--bs', type=int, default=128, help="test batch size")  # default 128
-    parser.add_argument('--lr', type=float, default=0.05, help="learning rate")
+    parser.add_argument('--lr', type=float, default=0.001, help="learning rate")
     parser.add_argument('--momentum', type=float, default=0.5, help="SGD momentum (default: 0.5)")
     parser.add_argument('--split', type=str, default='user', help="train-test split type, user or sample")
 
@@ -38,7 +38,7 @@ def args_parser():
     parser.add_argument('--all_clients', action='store_true', help='aggregation over all clients')
 
     # Differential Privacy arguments
-    parser.add_argument('--epsilon', type=float, default=3, help="DP Argument")
+    parser.add_argument('--epsilon', type=float, default=0, help="DP Argument")
     parser.add_argument('--precision', type=int, default=4, help="precision of float")
     args = parser.parse_args()
     return args
