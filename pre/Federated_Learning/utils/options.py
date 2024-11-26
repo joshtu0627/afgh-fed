@@ -38,7 +38,7 @@ def args_parser():
     parser.add_argument('--all_clients', action='store_true', help='aggregation over all clients')
 
     # Differential Privacy arguments
-    parser.add_argument('--epsilon', type=float, default=0, help="DP Argument")
+    parser.add_argument('--epsilon', type=float, default=-2, help="DP Argument")
     parser.add_argument('--precision', type=int, default=4, help="precision of float")
     args = parser.parse_args()
     return args

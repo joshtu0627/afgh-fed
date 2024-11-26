@@ -117,13 +117,13 @@ if __name__ == '__main__':
         idxs_users = np.array(range(m))
         for idx in idxs_users:
             local = LocalUpdate(args=args, dataset=dataset_train,idxs=dict_users[idx], client=idx)
-            w, loss, grad, grad_perturb, noises = local.train(net=copy.deepcopy(net_glob).to(args.device))
+            w, loss, grad, grad_perturb, noises = local.train_with_gradient_noise(net=copy.deepcopy(net_glob).to(args.device))
 
             if args.all_clients:
                 w_locals[idx] = copy.deepcopy(grad_perturb)
             else:
                 w_locals.append(copy.deepcopy(grad_perturb))
-                w_origin.append(copy.deepcopy(grad))
+                # w_origin.append(copy.deepcopy(grad))
             loss_locals.append(copy.deepcopy(loss))
 
         # Server read sum of noises
