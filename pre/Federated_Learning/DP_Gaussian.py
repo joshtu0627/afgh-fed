@@ -4,7 +4,7 @@ from utils.options import args_parser
 
 args = args_parser()
 
-def Laplace_Mechanism(data, device):
+def Gaussian_Mechanism(data, device):
     epsilon = pow(10, args.epsilon)
 
     maximum_list = []
@@ -22,7 +22,7 @@ def Laplace_Mechanism(data, device):
         if 'bias' in name:
             noises[name] = torch.zeros(data[name].shape, dtype=torch.float32).to(device)
             for i in range(len(data[name])):
-                noises[name][i] = np.random.laplace(0, sensitivity.cpu().numpy() / epsilon)
+                noises[name][i] = np.random.normal(0, sensitivity.cpu().numpy() / epsilon)
             noises[name] = torch.round(noises[name], decimals=args.precision)
         elif 'weight' in name:
             noises[name] = torch.zeros(data[name].shape, dtype=torch.float32).to(device)
