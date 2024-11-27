@@ -61,3 +61,16 @@ def Gaussian_Mechanism_Bias(data, device):
         #     noises[name] = torch.round(noises[name], decimals=args.precision)
 
     return noises
+
+def Gaussian_Mechanism_Lipschitz_Constant_Sensitivity(sensitivity, data, device):
+    epsilon = pow(10, args.epsilon)
+     
+    noises = {}
+    for name in data.keys():
+        # add noises only on bias
+        if 'bias' in name:
+            noises[name] = torch.zeros(data[name].shape, dtype=torch.float32).to(device)
+            for i in range(len(data[name])):
+                noises[name][i] = np.random.normal(0, sensitivity / epsilon)
+            noises[name] = torch.round(noises[name], decimals=args.precision)
+    return noises

@@ -22,3 +22,13 @@ class MLP(nn.Module):
         x = self.relu(x)
         x = self.layer_hidden(x)
         return x
+    
+    def spectral_norm(self, layer):
+        u, s, v = torch.svd(layer.weight.data)
+        return s.max().item()
+    
+    def lipschitz_constant(self):
+        spectral_norms = [self.spectral_norm(layer) for layer in self.children() if isinstance(layer, nn.Linear)]
+        loss_lipschitz_constant = 1  # CrossEntropyLoss 的 Lipschitz 常數為 1
+        model_lipschitz_constant = loss_lipschitz_constant * torch.prod(torch.tensor(spectral_norms)).item()
+        return model_lipschitz_constant
